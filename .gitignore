@@ -1,0 +1,5 @@
+node_modules/
+.firecrawl/
+reference-pack/_raw/
+*.log
+.DS_Store
