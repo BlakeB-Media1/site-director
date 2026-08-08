@@ -1,0 +1,67 @@
+Site Director — third-party attributions
+========================================
+
+This skill bundles, quotes, and indexes material from third parties. The MIT
+license in LICENSE covers this project's own code and prose. It does NOT
+relicense anything below. Each item keeps its own terms.
+
+
+1. UI/UX Pro Max  (data redistributed)
+--------------------------------------
+`references/design-elements.json` contains rows derived from the UI/UX Pro Max
+skill's CSV corpus — 161 colour-token rows (`data/colors.csv`) and 73 font
+pairings (`data/typography.csv`), carried over with their original field values.
+
+    Project: ui-ux-pro-max-skill
+    Author:  NextLevelBuilder
+    Source:  https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+    Home:    https://uupm.cc
+    License: MIT
+
+MIT permits redistribution with attribution; this notice is that attribution.
+Every affected entry in design-elements.json also carries
+`"source": "UI/UX Pro Max"` inline, and `sources["UI/UX Pro Max"].license`
+records the same. Regenerate the file from your own install with
+`node scripts/build-design-elements.mjs`.
+
+
+2. Component registries  (indexed, not redistributed)
+-----------------------------------------------------
+`reference-pack/registry-catalog.md` and the `components` array of
+design-elements.json are an INDEX: component names, install URLs, dependency
+weights, and usage notes. No component source code is copied into this repo.
+Each registry's own license governs the code you install from it.
+
+    shadcn/ui        https://ui.shadcn.com            MIT
+    Aceternity UI    https://ui.aceternity.com        source-available; free for personal
+                                                      and commercial use per site. NOT
+                                                      redistributable as a library — this
+                                                      repo therefore links, never vendors.
+    Magic UI         https://magicui.design           MIT
+    React Bits       https://reactbits.dev            MIT
+    Tailark          https://tailark.com              see site
+    HyperUI          https://www.hyperui.dev          MIT
+    Origin UI → coss https://coss.com/ui              MIT for the component apps;
+                                                      repo remainder AGPLv3
+
+If you believe an index entry oversteps, open an issue and it will be removed.
+
+
+3. Reference pack sources  (distilled, cited)
+---------------------------------------------
+`reference-pack/*.md` distils publicly published trend, colour, and typography
+reporting into original summaries. Each file cites its sources inline. Notable
+upstreams include Lounge Lizard, Davey & Krista, Pantone, Wix, Webflow, Muzli,
+Typewolf, and Fonts In Use. No article text is reproduced wholesale.
+
+
+4. Google Stitch  (integration target)
+--------------------------------------
+`connectors/google-stitch-connector.mjs` integrates with Google Stitch via the
+Stitch MCP server. Google Stitch is a Google product; this project is not
+affiliated with or endorsed by Google.
+
+NOTE: the connector declares the endpoint `https://stitch.googleapis.com/v1/prototypes`
+with the placeholder key `YOUR_API_KEY` because the skill's contract names it.
+No public Google Stitch REST API is known to exist and that endpoint has not
+been observed to respond. The working transport is MCP. See README § Connector.

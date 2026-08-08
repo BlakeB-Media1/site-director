@@ -1,0 +1,232 @@
+{
+  "skillName": "Site Director v2",
+  "version": "2.0",
+  "id": "site-director",
+  "author": "Blake + Claude",
+  "description": "Autonomous end-to-end website build/rebuild orchestrator. Unifies the design capabilities of Impeccable, TASTE, and UI/UX Pro Max into a single designElements schema, generates Google Stitch prototype variants through googleStitchConnector, and presents them as a selectable HTML gallery before hand-off to the build phase.",
+  "runtime": {
+    "format": "SKILL.md",
+    "entrypoint": "SKILL.md",
+    "note": "Claude Code loads skills from SKILL.md + YAML frontmatter. This JSON is a descriptive manifest of the v2 contract — modules, connectors, functions, and artifacts — not a loader format. Every path below resolves to a real file in this skill."
+  },
+
+  "modules": [
+    {
+      "name": "Impeccable",
+      "role": "Design QA, critique, motion polish, anti-slop detection",
+      "kind": "rules+generators",
+      "imports": ["paletteGeneration", "antiPatternDetection", "typographyRules", "layoutRules"],
+      "source": "~/.claude/skills/impeccable",
+      "invoke": [
+        "Skill(impeccable)",
+        "node ~/.claude/skills/impeccable/scripts/detect.mjs",
+        "node ~/.claude/skills/impeccable/scripts/palette.mjs"
+      ],
+      "usedInPhases": [2, 4],
+      "contract": "unchanged — invoked, never modified"
+    },
+    {
+      "name": "TASTE",
+      "role": "Anti-slop instincts, motion skeletons, density/variance dials",
+      "kind": "rules",
+      "skillId": "design-taste-frontend",
+      "imports": ["designVariance", "motionIntensity", "visualDensity", "motionSkeletons", "forbiddenAnimationPatterns"],
+      "source": "~/.claude/skills/taste-skill",
+      "invoke": ["Skill(design-taste-frontend)"],
+      "usedInPhases": [2, 3, 4],
+      "contract": "unchanged — invoked, never modified"
+    },
+    {
+      "name": "UI/UX Pro Max",
+      "role": "Design intelligence corpus: palettes, typography, styles, UX guidelines, charts",
+      "kind": "catalog",
+      "skillId": "ui-ux-pro-max:ui-ux-pro-max",
+      "imports": ["colors", "typography", "styles", "uxGuidelines", "charts", "stacks"],
+      "source": "resolved at build time — see designElements.sources",
+      "invoke": [
+        "Skill(ui-ux-pro-max:ui-ux-pro-max)",
+        "python \"<uupm>/scripts/search.py\" \"<query>\" --design-system"
+      ],
+      "usedInPhases": [2],
+      "contract": "unchanged — data snapshotted, source never modified"
+    },
+    {
+      "name": "site-director",
+      "role": "Native orchestration: brief, research fan-out, synthesis, build, QA loop, package",
+      "kind": "orchestrator",
+      "imports": ["referencePack", "agentTeam", "qaRubric", "croPlaybook", "seoAeoGeo", "stackRecipes", "motionRegistry"],
+      "source": "~/.claude/skills/site-director",
+      "usedInPhases": [0, 1, 2, 3, 3.5, 4, 5]
+    }
+  ],
+
+  "designElements": {
+    "schema": "site-director/designElements@2.0",
+    "data": "references/design-elements.json",
+    "build": "node scripts/build-design-elements.mjs [--uupm <dir>] [--dry-run]",
+    "rebuildWhen": "UI/UX Pro Max updates, or the reference pack is re-baked (>90 days)",
+    "materialized": {
+      "palettes": {
+        "count": 172,
+        "sources": { "UI/UX Pro Max": 161, "site-director": 11 },
+        "note": "UI/UX Pro Max rows carry a 16-role shadcn-style token set with paired on-colors; site-director rows are OKLCH palette directions with computed WCAG pairs."
+      },
+      "typography": {
+        "count": 93,
+        "sources": { "UI/UX Pro Max": 73, "site-director": 20 },
+        "note": "Google-Fonts-available pairings with heading/body split, mood keywords, and in-the-wild evidence."
+      },
+      "components": {
+        "count": 90,
+        "registries": 7,
+        "sources": { "site-director": 90 },
+        "note": "Curated registry index across shadcn/ui, Aceternity, Magic UI, React Bits, Tailark, HyperUI, and Origin UI → coss ui."
+      }
+    },
+    "indexed": {
+      "styles": { "source": "UI/UX Pro Max", "rows": 76, "kind": "catalog" },
+      "uxGuidelines": { "source": "UI/UX Pro Max", "rows": 99, "kind": "catalog" },
+      "charts": { "source": "UI/UX Pro Max", "rows": 25, "kind": "catalog" },
+      "impeccablePaletteEngine": { "source": "Impeccable", "kind": "generator" },
+      "impeccableAntipatterns": { "source": "Impeccable", "kind": "ruleset" },
+      "tasteDials": { "source": "TASTE", "kind": "ruleset" }
+    },
+    "indexRationale": "Impeccable generates palettes from a seed rather than shipping a catalogue, and TASTE encodes dials and motion rules rather than enumerable elements. They are indexed with resolution instructions instead of being given invented rows."
+  },
+
+  "connectors": {
+    "googleStitchConnector": {
+      "implementation": "connectors/google-stitch-connector.mjs",
+      "purpose": "Accepts a prototype payload from the agents, submits it to Google Stitch, returns the testing URL to the calling agent.",
+      "endpoint": "https://stitch.googleapis.com/v1/prototypes",
+      "apiKey": "YOUR_API_KEY",
+      "apiKeyEnv": "STITCH_API_KEY",
+      "transport": "mcp",
+      "transports": {
+        "mcp": {
+          "status": "verified",
+          "default": true,
+          "server": "stitch",
+          "tools": [
+            "mcp__stitch__create_project",
+            "mcp__stitch__upload_design_md",
+            "mcp__stitch__generate_screen_from_text",
+            "mcp__stitch__create_design_system_from_design_md",
+            "mcp__stitch__generate_variants",
+            "mcp__stitch__list_screens",
+            "mcp__stitch__get_screen"
+          ],
+          "note": "MCP tools are on Claude's tool surface, not Node's. The connector emits an executable call plan via planMcp(); Claude runs it."
+        },
+        "http": {
+          "status": "declared-unverified",
+          "method": "POST",
+          "endpoint": "https://stitch.googleapis.com/v1/prototypes",
+          "headers": { "x-goog-api-key": "YOUR_API_KEY", "content-type": "application/json" },
+          "note": "Wired up because the v2 contract names this endpoint. No public Google Stitch REST API is known to exist and this endpoint has not been observed to respond. The connector refuses to fire with the placeholder key rather than sending a doomed request."
+        }
+      },
+      "payload": {
+        "designMdPath": "DESIGN.md",
+        "projectId": "string (bare numeric, no projects/ prefix)",
+        "prompt": "string",
+        "deviceType": "DEVICE_TYPE_UNSPECIFIED | MOBILE | DESKTOP | TABLET | AGNOSTIC",
+        "variantOptions": {
+          "variantCount": 3,
+          "creativeRange": "REFINE | EXPLORE | REIMAGINE",
+          "aspects": ["LAYOUT", "COLOR_SCHEME", "TEXT_FONT"]
+        }
+      },
+      "returns": {
+        "prototypes": [{ "id": "string", "name": "string", "previewUrl": "string", "remotePreviewUrl": "string", "htmlUrl": "string", "testingUrl": "string", "metadata": "object" }],
+        "testingUrl": "string",
+        "count": "number"
+      },
+      "timeoutMs": 120000,
+      "poll": { "everyMs": 30000, "maxAttempts": 10 },
+      "cli": [
+        "node connectors/google-stitch-connector.mjs plan --design-md DESIGN.md --variants 3",
+        "node connectors/google-stitch-connector.mjs normalize --screens <screens.json> --local-dir prototypes --out <prototypes.json>",
+        "node connectors/google-stitch-connector.mjs submit --payload <payload.json> --transport http"
+      ]
+    }
+  },
+
+  "functions": {
+    "generatePrototypeHTML": {
+      "implementation": "scripts/generate-prototype-html.mjs",
+      "export": "generatePrototypeHTML(prototypes, options)",
+      "cli": [
+        "node scripts/generate-prototype-html.mjs --in <prototypes.json> --out <dir>",
+        "node scripts/generate-prototype-html.mjs --sample --out <dir>"
+      ],
+      "params": {
+        "prototypes": "Array<{ id?: string, name: string, previewUrl: string, testingUrl?: string, metadata?: object }>",
+        "options": { "title": "string", "project": "string", "metaKeys": 6 }
+      },
+      "returns": { "html": "string", "css": "string", "filename": "site-director-prototypes.html" },
+      "behaviour": [
+        "Renders each prototype as a selectable card using previewUrl as the thumbnail image source.",
+        "Shows the prototype name and key metadata beneath each thumbnail.",
+        "Select button stores the chosen prototype id in the hidden field #selectedPrototype.",
+        "Finish Pass-Through button triggers the JavaScript callback onFinish(selectedPrototype).",
+        "Self-contained: inline CSS and JS, zero external requests, renders from file://.",
+        "Keyboard-navigable radiogroup, dark/light aware, respects prefers-reduced-motion.",
+        "Default onFinish persists to localStorage and offers selection.json for download; override window.onFinish to replace it."
+      ]
+    },
+    "buildDesignElements": {
+      "implementation": "scripts/build-design-elements.mjs",
+      "cli": "node scripts/build-design-elements.mjs [--uupm <dir>] [--dry-run] [--out <file>]",
+      "returns": "references/design-elements.json",
+      "behaviour": [
+        "Probes every known UI/UX Pro Max location and picks the richest copy (largest colors.csv).",
+        "Accepts both CSV header generations (current token-set headers and legacy '(Hex)' headers).",
+        "Parses the site-director reference pack for OKLCH palette directions, type pairings, and the registry index.",
+        "Tags every entry with its source skill so provenance survives the merge."
+      ]
+    }
+  },
+
+  "outputArtifacts": [
+    { "path": ".site-director/prototypes/site-director-prototypes.html", "producedBy": "generatePrototypeHTML", "phase": 3.5, "kind": "html", "description": "Selectable gallery of prototype variants; self-contained." },
+    { "path": ".site-director/prototypes/styles.css", "producedBy": "generatePrototypeHTML", "phase": 3.5, "kind": "css", "description": "Auxiliary stylesheet mirroring the page's inline CSS, for overrides. The page does not link it." },
+    { "path": ".site-director/prototypes/prototypes.json", "producedBy": "googleStitchConnector.normalize", "phase": 3.5, "kind": "json", "description": "Normalized prototype array — gallery input." },
+    { "path": ".site-director/prototypes/<id>.png", "producedBy": "Phase 3.5", "phase": 3.5, "kind": "image", "description": "Locally cached variant screenshots; signed Stitch URLs expire." },
+    { "path": ".site-director/prototypes/<id>.html", "producedBy": "Phase 3.5", "phase": 3.5, "kind": "html", "description": "Stitch HTML export — layout reference for sd-builder, never shipped." },
+    { "path": ".site-director/prototypes/selection.json", "producedBy": "onFinish", "phase": 3.5, "kind": "json", "description": "The chosen prototype id, saved from the gallery." },
+    { "path": "references/design-elements.json", "producedBy": "buildDesignElements", "phase": 2, "kind": "json", "description": "Unified designElements corpus." },
+    { "path": "SITE.md", "producedBy": "Phase 2", "phase": 2, "kind": "markdown", "description": "Page map, per-page conversion goals, internal-link plan." },
+    { "path": "DESIGN.md", "producedBy": "Phase 2", "phase": 2, "kind": "markdown", "description": "Token system — OKLCH colors, type pairing, scales, motion. Stitch design-system input." },
+    { "path": ".site-director/DIRECTION.md", "producedBy": "Phase 2", "phase": 2, "kind": "markdown", "description": "Creative direction rationale + prototype selection record." },
+    { "path": ".site-director/quality-report.md", "producedBy": "Phase 5", "phase": 5, "kind": "markdown", "description": "Gate table, scores, degradations, open items." }
+  ],
+
+  "phases": [
+    { "id": 0, "name": "Intake", "mode": "serial", "gate": "single user approval" },
+    { "id": 1, "name": "Research fan-out", "mode": "parallel" },
+    { "id": 2, "name": "Synthesis", "mode": "serial", "consumes": ["designElements"] },
+    { "id": 3.5, "name": "Prototype gate", "mode": "serial", "optional": true, "connector": "googleStitchConnector", "reference": "references/prototype-gate.md" },
+    { "id": 3, "name": "Build", "mode": "parallel" },
+    { "id": 4, "name": "QA loop", "mode": "loop" },
+    { "id": 5, "name": "Package", "mode": "serial" }
+  ],
+
+  "compatibility": {
+    "preservedContracts": [
+      "impeccable — invoked, unmodified",
+      "taste-skill (design-taste-frontend) — invoked, unmodified",
+      "ui-ux-pro-max:ui-ux-pro-max — read-only data snapshot, unmodified",
+      "stitch-website-builder — still owns Stitch-as-build-engine flows; v2 uses Stitch only for prototyping",
+      "site-director v1 — all references/, reference-pack/, and scripts/ files retained; Phase 3.5 is additive and defaults to off"
+    ],
+    "requires": { "node": ">=18", "python": "for ui-ux-pro-max search.py", "mcp": ["stitch (optional — degrades to skip)"] }
+  },
+
+  "placeholders": [
+    { "token": "YOUR_API_KEY", "where": "connectors.googleStitchConnector.apiKey", "substitute": "Set STITCH_API_KEY only if a real Stitch REST endpoint is confirmed; the MCP transport needs no key." },
+    { "token": "<projectId>", "where": "connector payload / MCP plan", "substitute": "Bare numeric id from create_project or list_projects." },
+    { "token": "<screenId> / <screen INSTANCE id>", "where": "MCP plan steps 4 and 7", "substitute": "Read from the generate_screen_from_text result; instance id is not the source screen id." },
+    { "token": "<uupm>", "where": "designElements build + search.py invocations", "substitute": "Resolved automatically; override with --uupm <dir>." }
+  ]
+}

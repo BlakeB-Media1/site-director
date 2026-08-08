@@ -1,0 +1,16 @@
+# Operator-specific: agency offer ladder, upsell motion, private runbook paths.
+# Not part of the published skill — write your own if you run an agency preset.
+references/agency-preset.md
+
+# Raw scrape output from scripts/refresh-pack.mjs — regenerate, never commit
+reference-pack/_raw/
+
+# Local preview/build output
+.preview/
+node_modules/
+*.log
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
